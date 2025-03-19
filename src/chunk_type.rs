@@ -7,7 +7,7 @@ use anyhow::{anyhow, Result};
 // use crate::chunk;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
-struct ChunkType {
+pub struct ChunkType {
     data : String,
 }
 
