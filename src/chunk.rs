@@ -7,6 +7,7 @@ use crc;
 use anyhow::{anyhow, Result};
 
 use crate::chunk_type::ChunkType;
+use crate::error as PngMeError;
 
 // set up utility function for CRC
 pub fn calculate_crc(chunk_data: &Vec<u8>) -> u32 {
@@ -97,7 +98,7 @@ impl TryFrom<&[u8]> for Chunk {
     fn try_from(bytes: &[u8]) -> Result<Self> {
         // throw if input is shorter than necessary metadata length
         if bytes.len() < 12 {
-            return Err(anyhow!(ChunkError::InputTooSmall));
+            return Err(anyhow!(PngMeError::ChunkError::InputTooSmall(bytes.len().try_into().unwrap())));
         }
 
         // get first 4 bytes corresponding to chunks' data length
@@ -110,7 +111,7 @@ impl TryFrom<&[u8]> for Chunk {
         let chunk_type = ChunkType::try_from(chunk_type_bytes)?;
 
         if !chunk_type.is_valid() {
-            return Err(anyhow!(ChunkError::InvalidChunkType));
+            return Err(anyhow!(PngMeError::ChunkTypeError::InvalidChunkType));
         }
 
         // get chunks' data & crc from remaining bytes
@@ -130,7 +131,7 @@ impl TryFrom<&[u8]> for Chunk {
         let actual_crc = calculate_crc(&chunk_data);
         let expected_crc = crc;
         if actual_crc != expected_crc {
-            return Err(anyhow!(ChunkError::InvalidCrc(expected_crc, actual_crc)));
+            return Err(anyhow!(PngMeError::ChunkError::InvalidCrc(expected_crc, actual_crc)));
         }
 
         // all went well, return the fresh new Chunk
@@ -155,37 +156,6 @@ impl fmt::Display for Chunk {
         )
     }
 }
-
-#[derive(Debug)]
-pub enum ChunkError {
-    // input bytes length smaller than the necessary 12 bytes for metadata
-    InputTooSmall,
-    // invalid crc for chunk
-    InvalidCrc(u32,u32),
-    //InvalidChunkType
-    InvalidChunkType,
-}
-
-// impl error::Error for ChunkError {}
-
-impl fmt::Display for ChunkError {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match self {
-            ChunkError::InputTooSmall => {
-                write!(f, "At least 12 bytes MUST be supplied to construct a chunk")
-            },
-            ChunkError::InvalidCrc(expected, actual) => {
-                write!(
-                    f,
-                    "Invalid CRC when constructing chunk. Expected {}, but found {}",
-                    expected, actual
-                )
-            },
-            ChunkError::InvalidChunkType => write!(f, "Invalid chunk type")
-        }
-    }
-}
-
 
 #[cfg(test)]
 mod tests {

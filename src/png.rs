@@ -1,10 +1,9 @@
-use std::error;
 use std::fmt;
 
 use anyhow::{anyhow, Result};
 
 use crate::chunk::Chunk;
-
+use crate::error as PngMeError;
 
 pub struct Png {
     chunks: Vec<Chunk>,
@@ -27,7 +26,7 @@ impl Png {
         let index = self.chunks
             .iter()
             .position(|chunk| chunk.chunk_type().to_string() == chunk_type)
-            .ok_or(PNGError::ChunkNotFound)?;
+            .ok_or(PngMeError::PNGError::ChunkNotFound)?;
 
         let removed = self.chunks.remove(index);
         Ok(removed)
@@ -67,14 +66,14 @@ impl TryFrom<&[u8]> for Png {
     fn try_from(bytes: &[u8]) -> Result<Self> {
         // Throw Error is bytes array is too small
         if bytes.len() < Png::STANDARD_HEADER.len() {
-            return Err(anyhow!(PNGError::TooSmall));
+            return Err(anyhow!(PngMeError::PNGError::TooSmall));
         }
         // Seperate PNG signature from PNG body in input
         let (signature, bytes) = bytes.split_at(Png::STANDARD_HEADER.len()); // i.e. idx 8
         let signature: [u8;8] = signature.try_into()?;
         // check signature validity, throw error if not matched
         if signature != Png::STANDARD_HEADER {
-            return Err(anyhow!(PNGError::InvalidSignature));
+            return Err(anyhow!(PngMeError::PNGError::InvalidSignature));
         }
 
         let mut chunks = Vec::new();
@@ -103,33 +102,6 @@ impl fmt::Display for Png {
     }
 }
 
-#[derive(Debug)]
-pub enum PNGError {
-    // specified Chunk was not findable in PNG
-    ChunkNotFound,
-    // input bytes array too small to create valid PNG from
-    TooSmall,
-    // the input does not start with the necessary PNG header sequence
-    InvalidSignature,
-}
-
-impl error::Error for PNGError {}
-
-impl fmt::Display for PNGError {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match self {
-            PNGError::ChunkNotFound => {
-                write!(f, "Specified ChunkType cannot be found in this PNG")
-            },
-            PNGError::TooSmall => {
-                write!(f, "Input is too small to create PNG / Chunks from")
-            }
-            PNGError::InvalidSignature => {
-                write!(f, "Input begins with invalid set of bytes, mismatching necessary PNG signature header")
-            }
-        }
-    }
-}
 
 
 #[cfg(test)]

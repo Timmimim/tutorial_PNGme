@@ -1,10 +1,10 @@
 use std::fmt;
+use std::string::String;
 use std::str::FromStr;
 use std::{convert::TryFrom, u8};
 
 use anyhow::{anyhow, Result};
-
-// use crate::chunk;
+use crate::error as PngMeError;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ChunkType {
@@ -72,7 +72,7 @@ impl TryFrom<[u8;4]> for ChunkType {
             if ChunkType::is_valid_byte(ascii_val_to_check) {
                 continue;
             } else {
-                return Err(anyhow!("Invalid input"));
+                return Err(anyhow!(PngMeError::ChunkTypeError::InvalidBytes(String::from_utf8(bytes.to_vec()).unwrap())));
             }
         }
         let string:String = String::from_utf8(bytes[..].into()).unwrap();
@@ -81,7 +81,7 @@ impl TryFrom<[u8;4]> for ChunkType {
         if chunk.is_valid() {
             Ok(chunk)
         } else {
-            Err(anyhow!("The chunk is not valid"))
+            Err(anyhow!(PngMeError::ChunkTypeError::InvalidChunkType))
         }
     }
 }
