@@ -190,7 +190,7 @@ impl fmt::Display for ChunkError {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::chunk_type::{self, ChunkType};
+    use crate::chunk_type::ChunkType;
     use std::str::FromStr;
 
     fn testing_chunk() -> Chunk {
