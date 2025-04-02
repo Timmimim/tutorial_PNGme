@@ -10,7 +10,7 @@ use crate::chunk_type::ChunkType;
 use crate::error as PngMeError;
 
 // set up utility function for CRC
-pub fn calculate_crc(chunk_data: &Vec<u8>) -> u32 {
+pub fn calculate_crc_ieee_checksum(chunk_data: &Vec<u8>) -> u32 {
     let crc_algorithm = crc::Crc::<u32>::new(&crc::CRC_32_ISO_HDLC);
     let mut digest = crc_algorithm.digest();
     digest.update(&chunk_data);
@@ -35,7 +35,7 @@ impl Chunk {
             .chain(data.iter())
             .copied()
             .collect();
-        let crc = calculate_crc(&chunk_data);
+        let crc = calculate_crc_ieee_checksum(&chunk_data);
 
         Self {
             length,
@@ -128,7 +128,7 @@ impl TryFrom<&[u8]> for Chunk {
             .chain(data.iter())
             .copied()
             .collect();
-        let actual_crc = calculate_crc(&chunk_data);
+        let actual_crc = calculate_crc_ieee_checksum(&chunk_data);
         let expected_crc = crc;
         if actual_crc != expected_crc {
             return Err(anyhow!(PngMeError::ChunkError::InvalidCrc(expected_crc, actual_crc)));
