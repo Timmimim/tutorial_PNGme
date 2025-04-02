@@ -10,7 +10,7 @@ Basic functionality is implemented;
 
 - [ ] Introduce CLI options to handle multiple separate message chunks (Decode / Remove)
 - [ ] Add Functionality for Editing existing messages
-- [ ] Split code up into a library and binary (in accordance with [Cargo Project Layout](https://doc.rust-lang.org/cargo/guide/project-layout.html)
+- [ ] Split code up into a library and binary (in accordance with [Cargo Project Layout](https://doc.rust-lang.org/cargo/guide/project-layout.html))
 - [ ] Add support for URL inputs and downloading images from the internet
 - [ ] Add support for other file types (i.e. [Chunk-based](https://en.wikipedia.org/wiki/File_format#Chunk-based_formats) file formats)
 - [ ] Add an option to encrypt or obfuscate your hidden messages
