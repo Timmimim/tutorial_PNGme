@@ -47,6 +47,9 @@ pub struct DecodeArgs {
     // type of the new messages´ chunk
     #[arg(short='c', long, value_name="CHUNK_TYPE")]
     pub chunk_type : String,
+    // iterate ALL entries and decode all matching chunk_types
+    #[arg(short='m', long, action)]
+    pub multiple_chunks : bool,
 }
 
 /// remove the first chunk matching matching the specified chunk type
@@ -62,6 +65,9 @@ pub struct RemoveArgs {
     // optional: new file path for output PNG
     #[arg(short='o', long, value_name="NEW_FILEPATH", value_hint=clap::ValueHint::DirPath)]
     pub output_file : Option<PathBuf>,
+    // iterate ALL entries and remove all matching chunk_types
+    #[arg(short='m', long, action)]
+    pub multiple_chunks : bool,
 }
 
 /// print out the (raw) PNG file chunk by chunk 
