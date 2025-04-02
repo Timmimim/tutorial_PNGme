@@ -1,4 +1,7 @@
 use std::fmt;
+use std::fs::{read as read_file, File};
+use std::io::Write;
+use std::path::PathBuf;
 
 use anyhow::{anyhow, Result};
 
@@ -10,19 +13,22 @@ pub struct Png {
 }
 
 impl Png {
+    /// The first eight bytes of a PNG file always contain the following (decimal) values
+    /// Reference: http://www.libpng.org/pub/png/spec/1.2/PNG-Structure.html
     pub const STANDARD_HEADER: [u8;8] = [137, 80, 78, 71, 13, 10, 26, 10,];
-    // create a PNG from a variable number of chunks
+    
+    /// create a PNG from a variable number of chunks
     pub fn from_chunks(chunks: Vec<Chunk>) -> Png {
         Png {
             chunks,
         }
     }
-    // add a new chunk at the end of the PNG
+    /// add a new chunk at the end of the PNG
     pub fn append_chunk(&mut self, chunk: Chunk) {
         self.chunks.push(chunk);
     }
-    // remove the first Chunk matching a specific chunk_type from the PNG, and return this Chunk
-    pub fn remove_first_chunk(&mut self, chunk_type: &str) -> Result<Chunk> {
+    /// remove the first Chunk matching a specific chunk_type from the PNG, and return this Chunk
+    pub fn remove_chunk(&mut self, chunk_type: &str) -> Result<Chunk> {
         let index = self.chunks
             .iter()
             .position(|chunk| chunk.chunk_type().to_string() == chunk_type)
@@ -31,7 +37,7 @@ impl Png {
         let removed = self.chunks.remove(index);
         Ok(removed)
     }
-    // get the constant list of bytes storing PNG header
+    /// get the constant list of bytes storing PNG header
     pub fn header(&self) -> &[u8;8] {
         &Png::STANDARD_HEADER
     }
@@ -57,12 +63,24 @@ impl Png {
             .collect()
     }
 
+    pub fn read_file(path: PathBuf) -> Result<Self> {
+        let file = read_file(path).map_err(|err| PngMeError::FsIoError::UnableToReadFileError(err.to_string()))?;
+        Png::try_from(file.as_slice())
+    }
+
+    pub fn write_file(&self, path: &PathBuf) -> Result<()> {
+        let mut file = File::create(path).map_err(|err| PngMeError::FsIoError::UnableToCreateFileError(err.to_string()))?;
+        file.write(self.as_bytes().as_slice())
+            .map_err(|err| PngMeError::FsIoError::UnableToWriteToOutputFileError(err.to_string()))?;
+        Ok(())
+    }
+
 }
 
-// TryFrom trait for PNG to construct from a sequence of Bytes
+/// TryFrom trait for PNG to construct from a sequence of Bytes
 impl TryFrom<&[u8]> for Png {
     type Error = anyhow::Error;
-    // create a Png from a list of bytes
+    /// create a Png from a list of bytes
     fn try_from(bytes: &[u8]) -> Result<Self> {
         // Throw Error is bytes array is too small
         if bytes.len() < Png::STANDARD_HEADER.len() {
@@ -93,7 +111,7 @@ impl TryFrom<&[u8]> for Png {
     }
 }
 
-// Display
+/// Display
 impl fmt::Display for Png {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
@@ -229,7 +247,7 @@ mod tests {
     fn test_remove_first_chunk() {
         let mut png = testing_png();
         png.append_chunk(chunk_from_strings("TeSt", "Message").unwrap());
-        png.remove_first_chunk("TeSt").unwrap();
+        png.remove_chunk("TeSt").unwrap();
         let chunk = png.chunk_by_type("TeSt");
         assert!(chunk.is_none());
     }
