@@ -1,6 +1,5 @@
 use std::error;
 use std::fmt;
-use std::panic::resume_unwind;
 
 /*
     Create distinct Error categories depending on source within PNG / Chunk construction process.
@@ -14,6 +13,9 @@ pub enum ChunkTypeError {
     //InvalidChunkType
     InvalidChunkType,
 }
+
+impl error::Error for ChunkTypeError {}
+
 
 impl fmt::Display for ChunkTypeError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
@@ -36,6 +38,8 @@ pub enum ChunkError {
     
     // InvalidChunkLength(String),
 }
+
+impl error::Error for ChunkError {}
 
 
 impl fmt::Display for ChunkError {
@@ -91,6 +95,9 @@ pub enum FsIoError {
     UnableToWriteToOutputFileError(String),
     UnableToReadFileError(String),
 }
+
+impl error::Error for FsIoError {}
+
 
 impl fmt::Display for FsIoError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
